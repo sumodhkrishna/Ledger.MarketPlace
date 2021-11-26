@@ -55,7 +55,7 @@ namespace Ledger.MarketPlace.Test.Domain
         {
             var loan = new Loan(5000, 1, 6);
             var expectedEmiSchedule = new decimal[]{
-                442,442,442,442,442,442,442,442,442,442,442,438
+                0,442,442,442,442,442,442,442,442,442,442,442,438
             };
 
             var actualEmiSchedule = loan.EmiSchedule;
@@ -87,6 +87,20 @@ namespace Ledger.MarketPlace.Test.Domain
         {
             var loan = new Loan(5000, 1, 6);
             Assert.Throws<IndexOutOfRangeException>(() => loan.GetPaidAmountAndLeftEmis(13));
+        }
+
+
+        [Fact]
+        public void TestLoan_PaymentAt0()
+        {
+            // PAYMENT MBI Dale 1000 0
+            var loan = new Loan(5000, 4, 5);
+            loan.MakePayment(1000, 0);
+
+            var actualBeforePayment = loan.GetPaidAmountAndLeftEmis(0);
+
+            Assert.Equal(1000, actualBeforePayment.paidAmount);
+            Assert.Equal(40, actualBeforePayment.leftEmiCount);
         }
 
         [Fact]

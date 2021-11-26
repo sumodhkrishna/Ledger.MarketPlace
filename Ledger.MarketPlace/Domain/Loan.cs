@@ -14,7 +14,8 @@ namespace Ledger.MarketPlace.Domain
             TotalAmount = (amount * years * (rateOfInterest / 100)) + amount;
             Tenure = years * 12;
             EMIAmount = (decimal)Math.Ceiling(TotalAmount / Tenure);
-            EmiSchedule = Enumerable.Repeat(EMIAmount, Tenure).ToArray(); 
+            EmiSchedule = Enumerable.Repeat(EMIAmount, Tenure+1).ToArray();
+            EmiSchedule[0] = 0;
             if(EmiSchedule.Sum() > TotalAmount) 
                 this.EmiSchedule[this.EmiSchedule.Length - 1] = GetLastEmi(this.EmiSchedule.Length - 1,this.EmiSchedule);
             Amount = amount;
@@ -38,17 +39,16 @@ namespace Ledger.MarketPlace.Domain
         {
             CheckEmiOutOfRange(emiNumber);
             var newEmiSchedule = (decimal[])this.GetApplicableEmiSchedule(emiNumber).Clone();
-            newEmiSchedule[emiNumber - 1] += lumpSumAmount;
-            var leftEmiCount = Math.Ceiling((TotalAmount - newEmiSchedule.Take(emiNumber).Sum()) / EMIAmount);
+            newEmiSchedule[emiNumber] += lumpSumAmount;
+            var leftEmiCount = Math.Ceiling((TotalAmount - newEmiSchedule.Take(emiNumber +1).Sum()) / EMIAmount);
             int indexForLastEmi = (int)(leftEmiCount + emiNumber);
             newEmiSchedule = AdjustEmiSchedule(indexForLastEmi, newEmiSchedule);
             paymentHistoryAndUpdatedEMISchedule.Add(emiNumber, newEmiSchedule);
         }
         private decimal[] AdjustEmiSchedule(int lastEmiPosition, decimal[] emiSchedule)
         {
-            var indexForLastEmi = lastEmiPosition - 1;
-            Array.Clear(emiSchedule, indexForLastEmi, emiSchedule.Length - indexForLastEmi);
-            emiSchedule[indexForLastEmi] = GetLastEmi(indexForLastEmi, emiSchedule);
+            Array.Clear(emiSchedule, lastEmiPosition, emiSchedule.Length - lastEmiPosition);
+            emiSchedule[lastEmiPosition] = GetLastEmi(lastEmiPosition, emiSchedule);
             return emiSchedule;
         }
 
@@ -58,13 +58,14 @@ namespace Ledger.MarketPlace.Domain
         private decimal calculatePaidAmount(int emiNumber)
         {
             CheckEmiOutOfRange(emiNumber);
-            return GetApplicableEmiSchedule(emiNumber).Take(emiNumber).Sum();
+            return GetApplicableEmiSchedule(emiNumber).Take(emiNumber + 1).Sum();
         }
 
         private int calculateLeftEmisByTenure(int emiNumber)
         {
             CheckEmiOutOfRange(emiNumber);
             return GetApplicableEmiSchedule(emiNumber)
+                .Skip(1)
                 .Where(es => es > 0).Count() - emiNumber;
         }
 
@@ -72,7 +73,7 @@ namespace Ledger.MarketPlace.Domain
         {
             var paymentIndex = paymentHistoryAndUpdatedEMISchedule.Keys.Where(key => key <= emiNumber)
                             .OrderByDescending(k => k).FirstOrDefault();
-            if (paymentIndex > 0)
+            if (paymentHistoryAndUpdatedEMISchedule.Keys.Contains(paymentIndex))
             {
                 return paymentHistoryAndUpdatedEMISchedule.GetValueOrDefault(paymentIndex);
             }
@@ -81,7 +82,7 @@ namespace Ledger.MarketPlace.Domain
 
         private void CheckEmiOutOfRange(int emiNumber)
         {
-            if (emiNumber > this.EmiSchedule.Length)
+            if (emiNumber > this.EmiSchedule.Length - 1)
                 throw new IndexOutOfRangeException("The given emi number is grater than total EMI length");
         }
     }

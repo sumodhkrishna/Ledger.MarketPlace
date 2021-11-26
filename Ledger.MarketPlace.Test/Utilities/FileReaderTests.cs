@@ -25,11 +25,11 @@ namespace Ledger.MarketPlace.Test.Utiities
                 Assert.Contains(content, c => c.Equals("BALANCE MBI Barry 12"));
             }
         }
-
-        [Fact]
-        public void ReadTextFile_ThrowsArgumentExceptionOnNonAbsolutePath()
-        {
-           Assert.Throws<ArgumentException>(() =>FileReader.ReadFile("Utilities\\TestInput.txt"));
-        }
+        //Test case not valid anymore
+        //[Fact]
+        //public void ReadTextFile_ThrowsArgumentExceptionOnNonAbsolutePath()
+        //{
+        //   Assert.Throws<ArgumentException>(() =>FileReader.ReadFile("Utilities\\TestInput.txt"));
+        //}
     }
 }

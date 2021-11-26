@@ -11,9 +11,17 @@ namespace Ledger.MarketPlace.Utilities
     {
         public static List<string> ReadFile(string path)
         {
-            if (System.IO.Path.IsPathRooted(path) && Directory.Exists(path))
-                return System.IO.File.ReadAllLines(path).ToList();
-            throw new ArgumentException(@"The given "+path+" is not a valid absolute path");
+            List<string> lines = new List<string>();
+            string line;
+            FileStream fileStream = new FileStream(path, FileMode.Open);
+            using (StreamReader reader = new StreamReader(fileStream))
+            {
+                while ((line = reader.ReadLine()) != null)
+                {
+                    lines.Add(line);
+                }
+            }
+            return lines;
         }
     }
 }
